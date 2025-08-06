@@ -1,0 +1,257 @@
+<!-- templates/supply_chain/product_detail.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}{{ product.name }} - Quick Electronics{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'supply_chain:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'supply_chain:product_list' %}">Products</a></li>
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Product Information -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <!-- Product Header -->
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h1 class="h2 mb-2">{{ product.name }}</h1>
+                        <p class="text-muted mb-1">SKU: {{ product.sku }}</p>
+                        <p class="text-muted">
+                            <i class="fas fa-building me-1"></i>
+                            <a href="{% url 'supply_chain:supplier_list' %}" class="text-decoration-none">
+                                {{ product.supplier.company_name }}
+                            </a>
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        {% if product.is_in_stock %}
+                            <span class="badge bg-success fs-6 px-3 py-2">
+                                <i class="fas fa-check me-1"></i>In Stock
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6 px-3 py-2">
+                                <i class="fas fa-times me-1"></i>Out of Stock
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Price and Category -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center">
+                            <h2 class="text-primary mb-0 me-3">${{ product.unit_price|floatformat:2 }}</h2>
+                            <span class="text-muted">per unit</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="badge bg-secondary fs-6 px-3 py-2">
+                            <i class="fas fa-tag me-1"></i>
+                            {{ product.category.name }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h4>Description</h4>
+                    <p class="text-muted">{{ product.description }}</p>
+                </div>
+
+                <!-- Specifications -->
+                {% if product.specifications %}
+                <div class="mb-4">
+                    <h4>Specifications</h4>
+                    <div class="row">
+                        {% for key, value in product.specifications.items %}
+                        <div class="col-md-6 mb-2">
+                            <strong>{{ key|title }}:</strong> {{ value }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Stock Information -->
+                <div class="mb-4">
+                    <h4>Stock Information</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-primary">{{ product.stock_quantity }}</h5>
+                                    <small class="text-muted">Units Available</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-info">{{ product.minimum_order_quantity }}</h5>
+                                    <small class="text-muted">Minimum Order</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h5 class="text-success">
+                                        {% if product.inventory.stock_status == 'in_stock' %}
+                                            <i class="fas fa-check"></i>
+                                        {% elif product.inventory.stock_status == 'low_stock' %}
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        {% else %}
+                                            <i class="fas fa-times"></i>
+                                        {% endif %}
+                                    </h5>
+                                    <small class="text-muted text-capitalize">
+                                        {{ product.inventory.stock_status|default:"Unknown" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blockchain Information -->
+                {% if product.blockchain_hash %}
+                <div class="mb-4">
+                    <h4>Blockchain Verification</h4>
+                    <div class="alert alert-info">
+                        <i class="fas fa-link me-2"></i>
+                        <strong>Blockchain Hash:</strong>
+                        <code class="ms-2">{{ product.blockchain_hash }}</code>
+                        <small class="d-block mt-2">
+                            This product is verified on the blockchain for authenticity and traceability.
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Panel -->
+    <div class="col-lg-4 mb-4">
+        <div class="card sticky-top">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-shopping-cart me-2"></i>Order This Product
+                </h4>
+
+                {% if user.is_authenticated %}
+                    {% if product.is_in_stock %}
+                        <form method="post" action="{% url 'supply_chain:place_order' product.id %}">
+                            {% csrf_token %}
+                            
+                            <!-- Quantity -->
+                            <div class="mb-3">
+                                <label class="form-label">Quantity</label>
+                                <input type="number" name="quantity" class="form-control" 
+                                       min="{{ product.minimum_order_quantity }}" 
+                                       max="{{ product.stock_quantity }}"
+                                       value="{{ product.minimum_order_quantity }}" 
+                                       id="quantityInput">
+                                <small class="text-muted">
+                                    Min: {{ product.minimum_order_quantity }}, 
+                                    Max: {{ product.stock_quantity }}
+                                </small>
+                            </div>
+
+                            <!-- Total Price -->
+                            <div class="mb-3">
+                                <label class="form-label">Total Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="text" class="form-control" id="totalPrice" readonly>
+                                </div>
+                            </div>
+
+                            <!-- Shipping Address -->
+                            <div class="mb-3">
+                                <label class="form-label">Shipping Address</label>
+                                <textarea name="shipping_address" class="form-control" rows="3" 
+                                          placeholder="Enter your complete shipping address" required></textarea>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="mb-4">
+                                <label class="form-label">Notes (Optional)</label>
+                                <textarea name="notes" class="form-control" rows="2" 
+                                          placeholder="Additional notes or requirements"></textarea>
+                            </div>
+
+                            <!-- Order Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-shopping-cart me-2"></i>Place Order
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle fs-1 mb-3"></i>
+                            <h5>Out of Stock</h5>
+                            <p class="mb-0">This product is currently unavailable.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-user fs-1 mb-3"></i>
+                        <h5>Login Required</h5>
+                        <p class="mb-3">Please login to place an order.</p>
+                        <a href="{% url 'supply_chain:login' %}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
+                    </div>
+                {% endif %}
+
+                <!-- Supplier Information -->
+                <hr>
+                <div class="text-center">
+                    <h6 class="mb-3">Supplier Information</h6>
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        <strong>{{ product.supplier.company_name }}</strong>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        <span>{{ product.supplier.rating|floatformat:1 }}/5</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-center">
+                        <i class="fas fa-map-marker-alt text-info me-2"></i>
+                        <span>{{ product.supplier.city }}, {{ product.supplier.country }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantityInput');
+    const totalPriceInput = document.getElementById('totalPrice');
+    const unitPrice = {{ product.unit_price }};
+
+    function updateTotalPrice() {
+        const quantity = parseInt(quantityInput.value) || 0;
+        const total = quantity * unitPrice;
+        totalPriceInput.value = total.toFixed(2);
+    }
+
+    if (quantityInput && totalPriceInput) {
+        quantityInput.addEventListener('input', updateTotalPrice);
+        updateTotalPrice(); // Initial calculation
+    }
+});
+</script>
+
+{% endblock %}

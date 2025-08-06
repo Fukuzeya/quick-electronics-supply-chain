@@ -1,0 +1,204 @@
+<!-- templates/registration/login.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Login - Quick Electronics{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <!-- Login Card -->
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-5">
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="mb-3">
+                        <i class="fas fa-microchip text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h2 class="h4 text-gray-900 mb-2">Welcome Back!</h2>
+                    <p class="text-muted">Sign in to your account</p>
+                </div>
+
+                <!-- Login Form -->
+                <form method="post" class="user">
+                    {% csrf_token %}
+                    
+                    <!-- Username Field -->
+                    <div class="form-group mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" 
+                               placeholder="Enter your username" required 
+                               value="{{ form.username.value|default:'' }}">
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="form-group mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            <input type="password" name="password" class="form-control" 
+                                   placeholder="Enter your password" required id="passwordField">
+                            <button class="btn btn-outline-secondary" type="button" 
+                                    onclick="togglePassword()">
+                                <i class="fas fa-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Remember Me -->
+                    <div class="form-group mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="remember_me" id="remember_me">
+                            <label class="form-check-label" for="remember_me">
+                                Remember me
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Error Messages -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Login Button -->
+                    <button type="submit" class="btn btn-primary btn-user btn-block w-100 mb-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </button>
+
+                    <!-- Divider -->
+                    <hr class="my-4">
+
+                    <!-- Demo Accounts -->
+                    <div class="text-center">
+                        <small class="text-muted">Demo Accounts:</small>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-outline-info btn-sm me-2" 
+                                    onclick="fillDemo('supplier')">
+                                <i class="fas fa-truck me-1"></i>Supplier Demo
+                            </button>
+                            <button type="button" class="btn btn-outline-success btn-sm" 
+                                    onclick="fillDemo('customer')">
+                                <i class="fas fa-user me-1"></i>Customer Demo
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Links -->
+                <div class="text-center mt-4">
+                    <a class="small text-decoration-none" href="#">
+                        <i class="fas fa-key me-1"></i>Forgot Password?
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Card -->
+        <div class="card mt-4">
+            <div class="card-body text-center py-3">
+                <span class="text-muted">Don't have an account?</span>
+                <a href="{% url 'supply_chain:supplier_register' %}" class="text-decoration-none ms-2">
+                    <i class="fas fa-user-plus me-1"></i>Register as Supplier
+                </a>
+            </div>
+        </div>
+
+        <!-- Features Preview -->
+        <div class="card mt-4 bg-gradient" style="background: linear-gradient(135deg, #f8fafc, #e2e8f0);">
+            <div class="card-body">
+                <h6 class="text-center mb-3">
+                    <i class="fas fa-shield-alt me-2 text-primary"></i>
+                    Blockchain-Powered Security
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="fas fa-lock text-success mb-2"></i>
+                        <small class="d-block text-muted">Secure</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-eye text-primary mb-2"></i>
+                        <small class="d-block text-muted">Transparent</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-bolt text-warning mb-2"></i>
+                        <small class="d-block text-muted">Fast</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle password visibility
+function togglePassword() {
+    const passwordField = document.getElementById('passwordField');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
+// Fill demo account credentials
+function fillDemo(type) {
+    const usernameField = document.querySelector('input[name="username"]');
+    const passwordField = document.querySelector('input[name="password"]');
+    
+    if (type === 'supplier') {
+        usernameField.value = 'demo_supplier';
+        passwordField.value = 'demo123456';
+    } else {
+        usernameField.value = 'demo_customer';
+        passwordField.value = 'demo123456';
+    }
+}
+
+// Focus on username field when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('input[name="username"]').focus();
+});
+</script>
+
+<style>
+.btn-user {
+    font-size: 0.8rem;
+    border-radius: 10rem;
+    padding: 0.75rem 1rem;
+}
+
+.form-control {
+    border-radius: 10rem;
+}
+
+.input-group .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.input-group .btn {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 10rem;
+    border-bottom-right-radius: 10rem;
+}
+
+.card {
+    border-radius: 1rem;
+}
+</style>
+
+{% endblock %}

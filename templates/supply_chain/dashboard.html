@@ -1,0 +1,559 @@
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Dashboard - Quick Electronics{% endblock %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+                    Dashboard
+                </h1>
+                <p class="text-muted mb-0">
+                    {% if user_type == 'supplier' %}
+                        Welcome back, {{ supplier.contact_person }}! Here's your business overview.
+                    {% else %}
+                        Welcome back, {{ user.first_name|default:user.username }}! Here's your order summary.
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <span class="badge bg-primary fs-6 px-3 py-2">
+                    <i class="fas fa-clock me-1"></i>
+                    Last updated: <span id="last-updated">just now</span>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user_type == 'supplier' %}
+<!-- Supplier Dashboard -->
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Total Products</h6>
+                        <h2 class="mb-0">{{ total_products }}</h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-box fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small>{{ active_products }} active products</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Total Orders</h6>
+                        <h2 class="mb-0">{{ total_orders }}</h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-shopping-cart fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small>{{ pending_orders }} pending</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Supplier Rating</h6>
+                        <h2 class="mb-0">{{ supplier.rating|floatformat:1 }}/5</h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-star fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small>Based on customer feedback</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="card stats-card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Status</h6>
+                        <h2 class="mb-0">
+                            {% if supplier.status == 'approved' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% else %}
+                                <i class="fas fa-clock"></i>
+                            {% endif %}
+                        </h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-user-check fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small class="text-capitalize">{{ supplier.status }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:add_product' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Add Product
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:inventory_list' %}" class="btn btn-success w-100">
+                            <i class="fas fa-boxes me-2"></i>Manage Inventory
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:order_list' %}" class="btn btn-info w-100">
+                            <i class="fas fa-list me-2"></i>View Orders
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:product_list' %}" class="btn btn-secondary w-100">
+                            <i class="fas fa-eye me-2"></i>View Products
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders and Low Stock Alerts -->
+<div class="row mb-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-clock me-2"></i>Recent Orders
+                </h5>
+                <a href="{% url 'supply_chain:order_list' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Status</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'supply_chain:order_detail' order.id %}" 
+                                           class="text-decoration-none">
+                                            {{ order.order_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ order.customer.username }}</td>
+                                    <td>
+                                        <span class="badge status-{{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>${{ order.total_amount|floatformat:2 }}</td>
+                                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fs-1 mb-3 opacity-50"></i>
+                        <p>No recent orders</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Low Stock Alerts
+                </h5>
+                <a href="{% url 'supply_chain:inventory_list' %}" class="btn btn-sm btn-outline-warning">
+                    Manage
+                </a>
+            </div>
+            <div class="card-body">
+                {% if low_stock_products %}
+                    {% for product in low_stock_products %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ product.name|truncatechars:25 }}</h6>
+                            <small class="text-muted">
+                                Stock: {{ product.inventory.available_stock }} units
+                            </small>
+                        </div>
+                        <div>
+                            <a href="{% url 'supply_chain:update_inventory' product.id %}" 
+                               class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fs-1 mb-3 text-success opacity-50"></i>
+                        <p>All products well-stocked</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- Customer Dashboard -->
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card stats-card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Total Orders</h6>
+                        <h2 class="mb-0">{{ total_orders }}</h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-shopping-cart fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small>All time orders</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card stats-card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Active Orders</h6>
+                        <h2 class="mb-0">{{ active_orders.count }}</h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-truck fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small>In progress</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="card stats-card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title text-uppercase opacity-75">Member Since</h6>
+                        <h2 class="mb-0">{{ user.date_joined|date:"Y" }}</h2>
+                    </div>
+                    <div class="opacity-75">
+                        <i class="fas fa-calendar fs-1"></i>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <small>{{ user.date_joined|date:"M Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:product_list' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Browse Products
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:order_list' %}" class="btn btn-success w-100">
+                            <i class="fas fa-list me-2"></i>My Orders
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'supply_chain:supplier_list' %}" class="btn btn-info w-100">
+                            <i class="fas fa-truck me-2"></i>Suppliers
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <button class="btn btn-secondary w-100" data-bs-toggle="modal" data-bs-target="#trackOrderModal">
+                            <i class="fas fa-map-marker-alt me-2"></i>Track Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders and Active Orders -->
+<div class="row mb-4">
+    <!-- Recent Orders -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-history me-2"></i>Recent Orders
+                </h5>
+                <a href="{% url 'supply_chain:order_list' %}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_orders %}
+                    {% for order in recent_orders %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                <a href="{% url 'supply_chain:order_detail' order.id %}" 
+                                   class="text-decoration-none">
+                                    {{ order.order_number }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                {{ order.created_at|date:"M d, Y" }} • 
+                                ${{ order.total_amount|floatformat:2 }}
+                            </small>
+                        </div>
+                        <div>
+                            <span class="badge status-{{ order.status }}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-shopping-cart fs-1 mb-3 opacity-50"></i>
+                        <p>No orders yet</p>
+                        <a href="{% url 'supply_chain:product_list' %}" class="btn btn-primary">
+                            Start Shopping
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Orders -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-truck me-2"></i>Active Orders
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_orders %}
+                    {% for order in active_orders %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                <a href="{% url 'supply_chain:order_detail' order.id %}" 
+                                   class="text-decoration-none">
+                                    {{ order.order_number }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                {{ order.supplier.company_name }}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge status-{{ order.status }} mb-1">
+                                {{ order.get_status_display }}
+                            </span>
+                            <br>
+                            <button class="btn btn-sm btn-outline-primary" 
+                                    onclick="trackOrder('{{ order.id }}')">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-check-circle fs-1 mb-3 text-success opacity-50"></i>
+                        <p>No active orders</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Track Order Modal -->
+<div class="modal fade" id="trackOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-map-marker-alt me-2"></i>Track Order
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="trackingInput" 
+                           placeholder="Enter order number">
+                    <button class="btn btn-primary" onclick="searchOrder()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div id="trackingResults"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update last updated time
+    function updateTimestamp() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        document.getElementById('last-updated').textContent = timeString;
+    }
+
+    // Update every minute
+    setInterval(updateTimestamp, 60000);
+
+    // Track order function
+    function trackOrder(orderId) {
+        window.location.href = `/orders/${orderId}/`;
+    }
+
+    // Search order function
+    function searchOrder() {
+        const orderNumber = document.getElementById('trackingInput').value;
+        if (!orderNumber) {
+            alert('Please enter an order number');
+            return;
+        }
+        
+        // Here you would implement the search logic
+        document.getElementById('trackingResults').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-search me-2"></i>
+                Searching for order: ${orderNumber}...
+            </div>
+        `;
+        
+        // Simulate search delay
+        setTimeout(() => {
+            document.getElementById('trackingResults').innerHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Order not found. Please check the order number and try again.
+                </div>
+            `;
+        }, 1000);
+    }
+
+    // Real-time updates for supplier dashboard
+    {% if user_type == 'supplier' %}
+    function updateSupplierStats() {
+        // Implement real-time stats updates
+        fetch('/api/supplier/stats/')
+            .then(response => response.json())
+            .then(data => {
+                // Update stats display
+                console.log('Stats updated:', data);
+            })
+            .catch(error => console.error('Error updating stats:', error));
+    }
+
+    // Update stats every 5 minutes
+    setInterval(updateSupplierStats, 300000);
+    {% endif %}
+
+    // Animate counters on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const counters = document.querySelectorAll('.stats-card h2');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent);
+            let current = 0;
+            const increment = target / 50;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                counter.textContent = Math.floor(current);
+            }, 20);
+        });
+    });
+</script>
+{% endblock %}

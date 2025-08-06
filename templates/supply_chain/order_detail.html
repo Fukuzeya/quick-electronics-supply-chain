@@ -1,0 +1,331 @@
+<!-- templates/supply_chain/order_detail.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Order {{ order.order_number }} - Quick Electronics{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'supply_chain:home' %}">Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'supply_chain:order_list' %}">Orders</a></li>
+        <li class="breadcrumb-item active">{{ order.order_number }}</li>
+    </ol>
+</nav>
+
+<!-- Order Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1">Order {{ order.order_number }}</h1>
+                        <p class="mb-0 opacity-75">
+                            Placed on {{ order.created_at|date:"F d, Y \a\t g:i A" }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-white text-dark fs-6 px-3 py-2 mb-2">
+                            {{ order.get_status_display }}
+                        </span>
+                        <div class="h4 mb-0">${{ order.total_amount|floatformat:2 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Order Details -->
+    <div class="col-lg-8 mb-4">
+        <!-- Order Items -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-box me-2"></i>Order Items
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div>
+                                        <h6 class="mb-1">
+                                            <a href="{% url 'supply_chain:product_detail' item.product.id %}" 
+                                               class="text-decoration-none">
+                                                {{ item.product.name }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                    </div>
+                                </td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ item.unit_price|floatformat:2 }}</td>
+                                <td><strong>${{ item.total_price|floatformat:2 }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-primary">
+                                <th colspan="3" class="text-end">Total Amount:</th>
+                                <th>${{ order.total_amount|floatformat:2 }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking Events -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marker-alt me-2"></i>Order Tracking
+                </h5>
+                {% if user.supplier and order.supplier == user.supplier %}
+                <a href="{% url 'supply_chain:update_order_status' order.id %}" 
+                   class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Update
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body" id="tracking-events">
+                {% if tracking_events %}
+                    <div class="timeline">
+                        {% for event in tracking_events %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-1">{{ event.title }}</h6>
+                                    <small class="text-muted">
+                                        {{ event.timestamp|date:"M d, Y g:i A" }}
+                                    </small>
+                                </div>
+                                <p class="text-muted mb-1">{{ event.description }}</p>
+                                {% if event.location %}
+                                    <small class="text-info">
+                                        <i class="fas fa-map-pin me-1"></i>{{ event.location }}
+                                    </small>
+                                {% endif %}
+                                {% if event.blockchain_hash %}
+                                    <div class="mt-2">
+                                        <small class="text-success">
+                                            <i class="fas fa-link me-1"></i>
+                                            Blockchain verified: 
+                                            <code>{{ event.blockchain_hash|truncatechars:20 }}</code>
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-clock fs-1 mb-3 opacity-50"></i>
+                        <p>No tracking updates available yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Summary Sidebar -->
+    <div class="col-lg-4 mb-4">
+        <!-- Order Status -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Order Status
+                </h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <span class="badge status-{{ order.status }} fs-6 px-4 py-2">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+                <div class="progress mb-3" style="height: 8px;">
+                    {% if order.status == 'pending' %}
+                        <div class="progress-bar bg-warning" style="width: 20%"></div>
+                    {% elif order.status == 'confirmed' %}
+                        <div class="progress-bar bg-info" style="width: 40%"></div>
+                    {% elif order.status == 'processing' %}
+                        <div class="progress-bar bg-primary" style="width: 60%"></div>
+                    {% elif order.status == 'shipped' %}
+                        <div class="progress-bar bg-info" style="width: 80%"></div>
+                    {% elif order.status == 'delivered' %}
+                        <div class="progress-bar bg-success" style="width: 100%"></div>
+                    {% endif %}
+                </div>
+                {% if order.expected_delivery_date %}
+                    <small class="text-muted">
+                        Expected delivery: {{ order.expected_delivery_date|date:"M d, Y" }}
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Customer/Supplier Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    {% if user.supplier %}Customer{% else %}Supplier{% endif %} Information
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if user.supplier %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-user text-primary me-2"></i>
+                        <strong>{{ order.customer.username }}</strong>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-envelope text-info me-2"></i>
+                        <small>{{ order.customer.email }}</small>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-building text-primary me-2"></i>
+                        <strong>{{ order.supplier.company_name }}</strong>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-user text-secondary me-2"></i>
+                        <span>{{ order.supplier.contact_person }}</span>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        <span>{{ order.supplier.rating|floatformat:1 }}/5</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-map-marker-alt text-info me-2"></i>
+                        <small>{{ order.supplier.city }}, {{ order.supplier.country }}</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Shipping Address -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-truck me-2"></i>Shipping Address
+                </h6>
+            </div>
+            <div class="card-body">
+                <address class="mb-0">
+                    {{ order.shipping_address|linebreaks }}
+                </address>
+            </div>
+        </div>
+
+        <!-- Order Notes -->
+        {% if order.notes %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-sticky-note me-2"></i>Order Notes
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">{{ order.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Payment Information -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-credit-card me-2"></i>Payment Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Payment Status:</span>
+                    <span class="badge status-{{ order.payment_status }}">
+                        {{ order.get_payment_status_display }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <strong>Total Amount:</strong>
+                    <strong class="text-success">${{ order.total_amount|floatformat:2 }}</strong>
+                </div>
+                {% if order.blockchain_transaction_hash %}
+                    <hr>
+                    <small class="text-success">
+                        <i class="fas fa-link me-1"></i>
+                        Blockchain Transaction:
+                        <br>
+                        <code class="small">{{ order.blockchain_transaction_hash|truncatechars:30 }}</code>
+                    </small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border-color);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -25px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 3px var(--primary-color);
+}
+
+.timeline-content {
+    background: var(--light);
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+</style>
+
+<script>
+// Auto-refresh tracking events every 30 seconds
+setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        updateOrderTracking('{{ order.id }}');
+    }
+}, 30000);
+</script>
+
+{% endblock %}

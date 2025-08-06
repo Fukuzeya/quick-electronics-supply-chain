@@ -1,0 +1,324 @@
+<!-- templates/supply_chain/inventory_list.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Inventory Management - Quick Electronics{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-boxes me-2 text-primary"></i>
+                    Inventory Management
+                </h1>
+                <p class="text-muted mb-0">Monitor and manage your product inventory</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" onclick="refreshInventory()">
+                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                </button>
+                <a href="{% url 'supply_chain:add_product' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Add Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Summary -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-1">{{ products|length }}</h3>
+                <small>Total Products</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-1" id="in-stock-count">0</h3>
+                <small>In Stock</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-1" id="low-stock-count">0</h3>
+                <small>Low Stock</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3 class="mb-1" id="out-stock-count">0</h3>
+                <small>Out of Stock</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Stock Status</label>
+                        <select name="stock_status" class="form-control">
+                            <option value="">All Stock Levels</option>
+                            <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock</option>
+                            <option value="out" {% if stock_filter == 'out' %}selected{% endif %}>Out of Stock</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Search</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="Search products...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Table -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body" id="inventory-status">
+                {% if products %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Current Stock</th>
+                                    <th>Reserved</th>
+                                    <th>Available</th>
+                                    <th>Reorder Point</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr class="inventory-row" data-product-id="{{ product.id }}">
+                                    <td>
+                                        <div>
+                                            <h6 class="mb-1">{{ product.name }}</h6>
+                                            <small class="text-muted">{{ product.category.name }}</small>
+                                        </div>
+                                    </td>
+                                    <td><code>{{ product.sku }}</code></td>
+                                    {% if product.inventory %}
+                                    <td class="current-stock">{{ product.inventory.current_stock }}</td>
+                                    <td class="reserved-stock">{{ product.inventory.reserved_stock }}</td>
+                                    <td class="available-stock">{{ product.inventory.available_stock }}</td>
+                                    <td>{{ product.inventory.reorder_point }}</td>
+                                    <td>
+                                        {% if product.inventory.stock_status == 'in_stock' %}
+                                            <span class="badge bg-success">In Stock</span>
+                                        {% elif product.inventory.stock_status == 'low_stock' %}
+                                            <span class="badge bg-warning">Low Stock</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    {% else %}
+                                    <td colspan="4" class="text-muted">No inventory data</td>
+                                    <td>
+                                        <span class="badge bg-secondary">Unknown</span>
+                                    </td>
+                                    {% endif %}
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'supply_chain:update_inventory' product.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    onclick="viewProductHistory('{{ product.id }}')">
+                                                <i class="fas fa-history"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" 
+                                                    onclick="quickRestock('{{ product.id }}')">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-box fs-1 text-muted mb-3"></i>
+                        <h4 class="text-muted">No Products Found</h4>
+                        <p class="text-muted mb-4">Add products to start managing inventory.</p>
+                        <a href="{% url 'supply_chain:add_product' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Your First Product
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Restock Modal -->
+<div class="modal fade" id="restockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Quick Restock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="restockForm">
+                    <div class="mb-3">
+                        <label class="form-label">Product</label>
+                        <input type="text" class="form-control" id="restockProduct" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Current Stock</label>
+                        <input type="number" class="form-control" id="currentStock" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Add Quantity</label>
+                        <input type="number" class="form-control" id="addQuantity" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Total</label>
+                        <input type="number" class="form-control" id="newTotal" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="executeRestock()">
+                    <i class="fas fa-check me-1"></i>Update Stock
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentProductId = null;
+
+// Calculate stock statistics
+function updateStockStats() {
+    const rows = document.querySelectorAll('.inventory-row');
+    let inStock = 0, lowStock = 0, outStock = 0;
+    
+    rows.forEach(row => {
+        const statusBadge = row.querySelector('.badge');
+        if (statusBadge) {
+            if (statusBadge.textContent.includes('In Stock')) inStock++;
+            else if (statusBadge.textContent.includes('Low Stock')) lowStock++;
+            else if (statusBadge.textContent.includes('Out of Stock')) outStock++;
+        }
+    });
+    
+    document.getElementById('in-stock-count').textContent = inStock;
+    document.getElementById('low-stock-count').textContent = lowStock;
+    document.getElementById('out-stock-count').textContent = outStock;
+}
+
+// Quick restock function
+function quickRestock(productId) {
+    currentProductId = productId;
+    const row = document.querySelector(`[data-product-id="${productId}"]`);
+    const productName = row.querySelector('h6').textContent;
+    const currentStock = row.querySelector('.current-stock').textContent;
+    
+    document.getElementById('restockProduct').value = productName;
+    document.getElementById('currentStock').value = currentStock;
+    document.getElementById('addQuantity').value = '';
+    document.getElementById('newTotal').value = currentStock;
+    
+    new bootstrap.Modal(document.getElementById('restockModal')).show();
+}
+
+// Update new total when add quantity changes
+document.getElementById('addQuantity').addEventListener('input', function() {
+    const current = parseInt(document.getElementById('currentStock').value) || 0;
+    const add = parseInt(this.value) || 0;
+    document.getElementById('newTotal').value = current + add;
+});
+
+// Execute restock
+function executeRestock() {
+    const addQuantity = parseInt(document.getElementById('addQuantity').value);
+    if (!addQuantity || addQuantity < 1) {
+        alert('Please enter a valid quantity to add.');
+        return;
+    }
+    
+    // Here you would make an AJAX call to update the inventory
+    // For now, we'll simulate the update
+    const newTotal = parseInt(document.getElementById('newTotal').value);
+    const row = document.querySelector(`[data-product-id="${currentProductId}"]`);
+    row.querySelector('.current-stock').textContent = newTotal;
+    row.querySelector('.available-stock').textContent = newTotal; // Assuming no reserved stock
+    
+    // Update status badge if needed
+    const statusBadge = row.querySelector('.badge');
+    if (newTotal > 20) { // Assuming reorder point is 20
+        statusBadge.className = 'badge bg-success';
+        statusBadge.textContent = 'In Stock';
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('restockModal')).hide();
+    updateStockStats();
+    
+    // Show success message
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.innerHTML = `
+        <i class="fas fa-check me-2"></i>
+        Stock updated successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.main-content').insertBefore(alert, document.querySelector('.row'));
+    
+    setTimeout(() => alert.remove(), 5000);
+}
+
+// Refresh inventory
+function refreshInventory() {
+    // In a real application, this would fetch fresh data from the server
+    updateInventoryStatus();
+}
+
+// View product history (placeholder)
+function viewProductHistory(productId) {
+    alert('Product history feature coming soon!');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateStockStats();
+});
+</script>
+
+{% endblock %}

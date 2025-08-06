@@ -1,0 +1,218 @@
+<!-- templates/supply_chain/update_order_status.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Update Order Status - {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-edit me-2 text-primary"></i>
+                    Update Order Status
+                </h1>
+                <p class="text-muted mb-0">Order {{ order.order_number }}</p>
+            </div>
+            <a href="{% url 'supply_chain:order_detail' order.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Order
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Update Form -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>Status Update Form
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Current Status -->
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Current Status:</strong>
+                                <span class="badge status-{{ order.status }} ms-2">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </div>
+                            <small class="text-muted">
+                                Last updated: {{ order.updated_at|date:"M d, Y g:i A" }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- New Status -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">New Order Status *</label>
+                            <select name="status" class="form-control" required>
+                                {% for status_code, status_display in order_statuses %}
+                                <option value="{{ status_code }}" 
+                                        {% if status_code == order.status %}selected{% endif %}>
+                                    {{ status_display }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tracking Event Type *</label>
+                            <select name="event_type" class="form-control" required>
+                                {% for event_code, event_display in event_types %}
+                                <option value="{{ event_code }}">{{ event_display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Event Details -->
+                    <div class="mb-4">
+                        <label class="form-label">Event Title *</label>
+                        <input type="text" name="title" class="form-control" 
+                               placeholder="Brief title for this update" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Description *</label>
+                        <textarea name="description" class="form-control" rows="4" 
+                                  placeholder="Detailed description of the status update" required></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">Location (Optional)</label>
+                        <input type="text" name="location" class="form-control" 
+                               placeholder="Current location or facility">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% url 'supply_chain:order_detail' order.id %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Update Order Status
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Order Summary
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Order Number:</strong><br>
+                    <code>{{ order.order_number }}</code>
+                </div>
+                <div class="mb-3">
+                    <strong>Customer:</strong><br>
+                    {{ order.customer.username }}
+                </div>
+                <div class="mb-3">
+                    <strong>Total Amount:</strong><br>
+                    <span class="h5 text-success">${{ order.total_amount|floatformat:2 }}</span>
+                </div>
+                <div class="mb-3">
+                    <strong>Items:</strong><br>
+                    {{ order.items.count }} product{{ order.items.count|pluralize }}
+                </div>
+                <div class="mb-3">
+                    <strong>Order Date:</strong><br>
+                    {{ order.created_at|date:"M d, Y g:i A" }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Status Templates -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-magic me-2"></i>Quick Templates
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                            onclick="fillTemplate('confirmed')">
+                        Order Confirmed
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm" 
+                            onclick="fillTemplate('processing')">
+                        Processing Order
+                    </button>
+                    <button type="button" class="btn btn-outline-warning btn-sm" 
+                            onclick="fillTemplate('shipped')">
+                        Order Shipped
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm" 
+                            onclick="fillTemplate('delivered')">
+                        Order Delivered
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const templates = {
+    confirmed: {
+        title: 'Order Confirmed',
+        description: 'Your order has been confirmed and is being prepared for shipment.',
+        event_type: 'order_confirmed'
+    },
+    processing: {
+        title: 'Order in Production',
+        description: 'Your order is currently being processed and prepared.',
+        event_type: 'in_production'
+    },
+    shipped: {
+        title: 'Order Shipped',
+        description: 'Your order has been shipped and is on its way to the delivery address.',
+        event_type: 'shipped'
+    },
+    delivered: {
+        title: 'Order Delivered',
+        description: 'Your order has been successfully delivered to the specified address.',
+        event_type: 'delivered'
+    }
+};
+
+function fillTemplate(type) {
+    const template = templates[type];
+    if (template) {
+        document.querySelector('input[name="title"]').value = template.title;
+        document.querySelector('textarea[name="description"]').value = template.description;
+        document.querySelector('select[name="event_type"]').value = template.event_type;
+        document.querySelector('select[name="status"]').value = type;
+    }
+}
+
+// Auto-fill location based on geolocation (if available)
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(function(position) {
+        // In a real app, you'd reverse geocode the coordinates
+        // For now, we'll just indicate that location services are available
+        const locationInput = document.querySelector('input[name="location"]');
+        locationInput.placeholder = 'Location services available - enter manually or use GPS';
+    });
+}
+</script>
+
+{% endblock %}

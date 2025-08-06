@@ -1,0 +1,219 @@
+<!-- templates/supply_chain/supplier_register.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Supplier Registration - Quick Electronics{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h1 class="h2 mb-3">
+            <i class="fas fa-user-plus me-2 text-primary"></i>
+            Supplier Registration
+        </h1>
+        <p class="text-muted mb-0">Join our network of trusted electronics suppliers</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Registration Benefits -->
+        <div class="card bg-gradient mb-4" style="background: linear-gradient(135deg, #f8fafc, #e2e8f0);">
+            <div class="card-body text-center py-4">
+                <h4 class="text-primary mb-3">Why Join Our Network?</h4>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <i class="fas fa-globe text-success fs-1 mb-2"></i>
+                        <h6>Global Reach</h6>
+                        <small class="text-muted">Access to international customers</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <i class="fas fa-shield-alt text-primary fs-1 mb-2"></i>
+                        <h6>Blockchain Security</h6>
+                        <small class="text-muted">Secure, transparent transactions</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <i class="fas fa-chart-line text-warning fs-1 mb-2"></i>
+                        <h6>Growth Opportunities</h6>
+                        <small class="text-muted">Expand your business reach</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-building me-2"></i>Company Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- User Account Section -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-user me-2"></i>Account Details
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Username *</label>
+                                {{ user_form.username }}
+                                {% if user_form.username.errors %}
+                                    <div class="text-danger small">{{ user_form.username.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address *</label>
+                                {{ user_form.email }}
+                                {% if user_form.email.errors %}
+                                    <div class="text-danger small">{{ user_form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Password *</label>
+                                {{ user_form.password1 }}
+                                {% if user_form.password1.errors %}
+                                    <div class="text-danger small">{{ user_form.password1.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirm Password *</label>
+                                {{ user_form.password2 }}
+                                {% if user_form.password2.errors %}
+                                    <div class="text-danger small">{{ user_form.password2.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Company Information Section -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-building me-2"></i>Company Details
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Company Name *</label>
+                                {{ supplier_form.company_name }}
+                                {% if supplier_form.company_name.errors %}
+                                    <div class="text-danger small">{{ supplier_form.company_name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Registration Number *</label>
+                                {{ supplier_form.registration_number }}
+                                {% if supplier_form.registration_number.errors %}
+                                    <div class="text-danger small">{{ supplier_form.registration_number.errors.0 }}</div>
+                                {% endif %}
+                                <small class="text-muted">Business/Tax registration number</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contact Person *</label>
+                                {{ supplier_form.contact_person }}
+                                {% if supplier_form.contact_person.errors %}
+                                    <div class="text-danger small">{{ supplier_form.contact_person.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Business Email *</label>
+                                {{ supplier_form.email }}
+                                {% if supplier_form.email.errors %}
+                                    <div class="text-danger small">{{ supplier_form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                {{ supplier_form.phone }}
+                                {% if supplier_form.phone.errors %}
+                                    <div class="text-danger small">{{ supplier_form.phone.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Address Information -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3">
+                            <i class="fas fa-map-marker-alt me-2"></i>Business Address
+                        </h6>
+                        <div class="mb-3">
+                            <label class="form-label">Business Address *</label>
+                            {{ supplier_form.address }}
+                            {% if supplier_form.address.errors %}
+                                <div class="text-danger small">{{ supplier_form.address.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Country *</label>
+                                {{ supplier_form.country }}
+                                {% if supplier_form.country.errors %}
+                                    <div class="text-danger small">{{ supplier_form.country.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">City *</label>
+                                {{ supplier_form.city }}
+                                {% if supplier_form.city.errors %}
+                                    <div class="text-danger small">{{ supplier_form.city.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Postal Code *</label>
+                                {{ supplier_form.postal_code }}
+                                {% if supplier_form.postal_code.errors %}
+                                    <div class="text-danger small">{{ supplier_form.postal_code.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="form-check mb-4">
+                        <input class="form-check-input" type="checkbox" id="termsCheck" required>
+                        <label class="form-check-label" for="termsCheck">
+                            I agree to the <a href="#" class="text-decoration-none">Terms and Conditions</a> 
+                            and <a href="#" class="text-decoration-none">Privacy Policy</a>. 
+                            I confirm that all information provided is accurate and complete.
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Registration
+                        </button>
+                        <small class="text-center text-muted">
+                            Your application will be reviewed within 2-3 business days
+                        </small>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Already Registered -->
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <p class="mb-2">Already have an account?</p>
+                <a href="{% url 'supply_chain:login' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-sign-in-alt me-1"></i>Login Here
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

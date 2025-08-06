@@ -1,0 +1,302 @@
+<!-- templates/supply_chain/update_inventory.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Update Inventory - {{ product.name }}{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-boxes me-2 text-primary"></i>
+                    Update Inventory
+                </h1>
+                <p class="text-muted mb-0">{{ product.name }} ({{ product.sku }})</p>
+            </div>
+            <a href="{% url 'supply_chain:inventory_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Inventory Form -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>Inventory Settings
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Current Stock Levels -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Current Stock *</label>
+                            {{ form.current_stock }}
+                            {% if form.current_stock.errors %}
+                                <div class="text-danger small">{{ form.current_stock.errors.0 }}</div>
+                            {% endif %}
+                            <small class="text-muted">Total units in warehouse</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Reserved Stock</label>
+                            {{ form.reserved_stock }}
+                            {% if form.reserved_stock.errors %}
+                                <div class="text-danger small">{{ form.reserved_stock.errors.0 }}</div>
+                            {% endif %}
+                            <small class="text-muted">Units reserved for pending orders</small>
+                        </div>
+                    </div>
+
+                    <!-- Stock Thresholds -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Minimum Stock Level *</label>
+                            {{ form.minimum_stock_level }}
+                            {% if form.minimum_stock_level.errors %}
+                                <div class="text-danger small">{{ form.minimum_stock_level.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Maximum Stock Level *</label>
+                            {{ form.maximum_stock_level }}
+                            {% if form.maximum_stock_level.errors %}
+                                <div class="text-danger small">{{ form.maximum_stock_level.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Reorder Point *</label>
+                            {{ form.reorder_point }}
+                            {% if form.reorder_point.errors %}
+                                <div class="text-danger small">{{ form.reorder_point.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Calculated Values -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">Calculated Values</h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Available Stock:</strong><br>
+                                    <span class="h5 text-success" id="availableStock">
+                                        {{ inventory.available_stock|default:0 }}
+                                    </span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Stock Status:</strong><br>
+                                    <span class="badge" id="stockStatus">Calculating...</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Reorder Needed:</strong><br>
+                                    <span id="reorderNeeded">Calculating...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% url 'supply_chain:inventory_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Inventory
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Info & Actions -->
+    <div class="col-lg-4 mb-4">
+        <!-- Product Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-box me-2"></i>Product Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Product Name:</strong><br>
+                    {{ product.name }}
+                </div>
+                <div class="mb-3">
+                    <strong>SKU:</strong><br>
+                    <code>{{ product.sku }}</code>
+                </div>
+                <div class="mb-3">
+                    <strong>Category:</strong><br>
+                    {{ product.category.name }}
+                </div>
+                <div class="mb-3">
+                    <strong>Unit Price:</strong><br>
+                    <span class="h6 text-success">${{ product.unit_price|floatformat:2 }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-sm" 
+                            onclick="quickRestock()">
+                        <i class="fas fa-plus me-1"></i>Quick Restock
+                    </button>
+                    <button type="button" class="btn btn-info btn-sm" 
+                            onclick="viewHistory()">
+                        <i class="fas fa-history me-1"></i>View History
+                    </button>
+                    <a href="{% url 'supply_chain:product_detail' product.id %}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>View Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Restock Modal -->
+<div class="modal fade" id="quickRestockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>Quick Restock
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Add Stock Quantity</label>
+                    <input type="number" class="form-control" id="restockQuantity" 
+                           min="1" placeholder="Enter quantity to add">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reason</label>
+                    <select class="form-control" id="restockReason">
+                        <option value="restock">Regular Restock</option>
+                        <option value="return">Customer Return</option>
+                        <option value="adjustment">Inventory Adjustment</option>
+                        <option value="found">Found Stock</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="executeRestock()">
+                    <i class="fas fa-check me-1"></i>Add Stock
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function calculateValues() {
+    const currentStock = parseInt(document.getElementById('id_current_stock').value) || 0;
+    const reservedStock = parseInt(document.getElementById('id_reserved_stock').value) || 0;
+    const reorderPoint = parseInt(document.getElementById('id_reorder_point').value) || 0;
+    
+    const availableStock = currentStock - reservedStock;
+    
+    // Update available stock
+    document.getElementById('availableStock').textContent = availableStock;
+    
+    // Update stock status
+    const statusSpan = document.getElementById('stockStatus');
+    const reorderSpan = document.getElementById('reorderNeeded');
+    
+    if (availableStock <= 0) {
+        statusSpan.className = 'badge bg-danger';
+        statusSpan.textContent = 'Out of Stock';
+        reorderSpan.innerHTML = '<span class="text-danger">🚨 URGENT</span>';
+    } else if (availableStock <= reorderPoint) {
+        statusSpan.className = 'badge bg-warning';
+        statusSpan.textContent = 'Low Stock';
+        reorderSpan.innerHTML = '<span class="text-warning">⚠️ YES</span>';
+    } else {
+        statusSpan.className = 'badge bg-success';
+        statusSpan.textContent = 'In Stock';
+        reorderSpan.innerHTML = '<span class="text-success">✅ NO</span>';
+    }
+}
+
+function quickRestock() {
+    const modal = new bootstrap.Modal(document.getElementById('quickRestockModal'));
+    modal.show();
+}
+
+function executeRestock() {
+    const quantity = parseInt(document.getElementById('restockQuantity').value);
+    const reason = document.getElementById('restockReason').value;
+    
+    if (!quantity || quantity < 1) {
+        alert('Please enter a valid quantity.');
+        return;
+    }
+    
+    const currentStockInput = document.getElementById('id_current_stock');
+    const currentStock = parseInt(currentStockInput.value) || 0;
+    const newStock = currentStock + quantity;
+    
+    currentStockInput.value = newStock;
+    calculateValues();
+    
+    bootstrap.Modal.getInstance(document.getElementById('quickRestockModal')).hide();
+    
+    // Show success message
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show';
+    alert.innerHTML = `
+        <i class="fas fa-check me-2"></i>
+        Added ${quantity} units to inventory (${reason}). Don't forget to save changes!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container').insertBefore(alert, document.querySelector('.row'));
+}
+
+function viewHistory() {
+    alert('Inventory history feature coming soon!');
+}
+
+// Add event listeners for real-time calculation
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['id_current_stock', 'id_reserved_stock', 'id_reorder_point'];
+    inputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', calculateValues);
+        }
+    });
+    
+    // Initial calculation
+    calculateValues();
+});
+</script>
+
+{% endblock %}

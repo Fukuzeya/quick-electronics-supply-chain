@@ -1,0 +1,420 @@
+# requirements.txt
+# Core Django Framework
+Django==4.2.7
+django-extensions==3.2.3
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# Database
+psycopg2-binary==2.9.7  # PostgreSQL adapter
+django-environ==0.11.2  # Environment variables
+python-decouple==3.8     # Configuration management
+
+# API and REST Framework
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+
+# Caching and Performance
+django-redis==5.4.0
+redis==5.0.1
+whitenoise==6.6.0  # Static file serving
+
+# File Processing
+Pillow==10.0.1      # Image processing
+openpyxl==3.1.2     # Excel file processing
+python-magic==0.4.27 # File type detection
+
+# Date and Time
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Security and Authentication
+django-allauth==0.57.0  # Enhanced authentication
+cryptography==41.0.7    # Encryption utilities
+
+# Background Tasks (Optional)
+celery==5.3.4
+django-celery-beat==2.5.0
+kombu==5.3.4
+
+# Blockchain Integration (Optional)
+web3==6.11.3
+eth-account==0.9.0
+
+# Development Tools
+django-debug-toolbar==4.2.0
+factory-boy==3.3.0      # Test data generation
+faker==19.12.0          # Fake data generation
+
+# Monitoring and Logging
+sentry-sdk==1.38.0      # Error tracking
+django-health-check==3.17.0
+
+# Data Validation and Serialization
+marshmallow==3.20.1
+django-filter==23.3
+
+# Testing
+pytest==7.4.3
+pytest-django==4.7.0
+coverage==7.3.2
+
+# Documentation
+Sphinx==7.2.6
+sphinx-rtd-theme==1.3.0
+
+# Production Server
+gunicorn==21.2.0
+uwsgi==2.0.23
+
+# Environment and Configuration
+python-dotenv==1.0.0
+
+---
+
+# .env.example
+# Copy this file to .env and update the values
+
+# Django Settings
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database Configuration
+USE_SQLITE=True
+DB_NAME=quick_electronics_db
+DB_USER=postgres
+DB_PASSWORD=your-db-password
+DB_HOST=localhost
+DB_PORT=5432
+
+# Email Configuration
+EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=noreply@quickelectronics.com
+
+# Cache Configuration
+USE_REDIS_CACHE=False
+REDIS_URL=redis://127.0.0.1:6379/1
+
+# Celery Configuration (Optional)
+USE_CELERY=False
+CELERY_BROKER_URL=redis://localhost:6379
+CELERY_RESULT_BACKEND=redis://localhost:6379
+
+# Blockchain Configuration (Optional)
+BLOCKCHAIN_ENABLED=False
+BLOCKCHAIN_NETWORK=testnet
+BLOCKCHAIN_CONTRACT_ADDRESS=
+BLOCKCHAIN_PRIVATE_KEY=
+
+---
+
+# README.md
+
+# Quick Electronics Supply Chain Management System
+
+A comprehensive Django-based supply chain management system for electronic goods, featuring blockchain integration for transparency and security.
+
+## Features
+
+### 🏪 Supplier Management
+- **Efficient Registration**: Streamlined onboarding process with verification
+- **Performance Tracking**: Monitor supplier metrics and ratings
+- **Product Catalog**: Comprehensive product management
+
+### 🛒 Order Management  
+- **Seamless Ordering**: Intuitive order placement system
+- **Real-time Tracking**: Live order status updates
+- **Automated Workflows**: Streamlined order processing
+
+### 📦 Inventory Management
+- **Real-time Monitoring**: Live inventory level tracking
+- **Automatic Alerts**: Low stock and reorder notifications
+- **Predictive Analytics**: Smart inventory forecasting
+
+### 🔗 Blockchain Integration
+- **Transparent Records**: Immutable transaction history
+- **Product Authenticity**: Verified genuine products
+- **Supply Chain Traceability**: End-to-end visibility
+
+## Technology Stack
+
+- **Backend**: Django 4.2, Python 3.8+
+- **Database**: PostgreSQL (SQLite for development)
+- **Frontend**: Bootstrap 5, JavaScript ES6
+- **Caching**: Redis
+- **Background Tasks**: Celery
+- **Blockchain**: Web3.py, Ethereum
+
+## Installation
+
+### Prerequisites
+- Python 3.8 or higher
+- PostgreSQL (optional, SQLite included)
+- Redis (optional for caching)
+- Git
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/quick-electronics-supply-chain.git
+   cd quick-electronics-supply-chain
+   ```
+
+2. **Create virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment setup**
+   ```bash
+   cp .env.example .env
+   # Edit .env file with your configuration
+   ```
+
+5. **Database setup**
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   python manage.py createsuperuser
+   ```
+
+6. **Load sample data (optional)**
+   ```bash
+   python manage.py loaddata fixtures/sample_data.json
+   ```
+
+7. **Run development server**
+   ```bash
+   python manage.py runserver
+   ```
+
+8. **Access the application**
+   - Main site: http://127.0.0.1:8000/
+   - Admin panel: http://127.0.0.1:8000/admin/
+
+## Project Structure
+
+```
+quick_electronics/
+├── supply_chain/           # Main application
+│   ├── migrations/         # Database migrations
+│   ├── templates/          # HTML templates
+│   ├── static/            # CSS, JS, images
+│   ├── models.py          # Data models
+│   ├── views.py           # Business logic
+│   ├── forms.py           # Form definitions
+│   ├── urls.py            # URL routing
+│   └── admin.py           # Admin interface
+├── templates/             # Global templates
+├── static/               # Global static files
+├── media/                # User uploads
+├── logs/                 # Application logs
+├── requirements.txt      # Python dependencies
+├── manage.py            # Django management script
+└── settings.py          # Django configuration
+```
+
+## Configuration
+
+### Database Configuration
+
+**PostgreSQL (Recommended for production):**
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'quick_electronics_db',
+        'USER': 'your_user',
+        'PASSWORD': 'your_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+```
+
+**SQLite (Development):**
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+
+### Blockchain Configuration
+
+```python
+BLOCKCHAIN_SETTINGS = {
+    'NETWORK': 'mainnet',  # or 'testnet'
+    'CONTRACT_ADDRESS': 'your_contract_address',
+    'PRIVATE_KEY': 'your_private_key',
+    'ENABLED': True,
+}
+```
+
+## Usage
+
+### For Suppliers
+
+1. **Register**: Create supplier account with business details
+2. **Verification**: Wait for admin approval
+3. **Add Products**: Upload product catalog with specifications
+4. **Manage Orders**: Process and track customer orders
+5. **Monitor Inventory**: Keep track of stock levels
+
+### For Customers
+
+1. **Browse Products**: Explore electronic goods catalog
+2. **Place Orders**: Select products and place orders
+3. **Track Shipments**: Monitor order status in real-time
+4. **Manage Account**: Update profile and view order history
+
+### For Administrators
+
+1. **Supplier Management**: Approve/reject supplier applications
+2. **System Monitoring**: Monitor platform performance
+3. **Order Oversight**: Manage order disputes and issues
+4. **Analytics**: View platform usage and performance metrics
+
+## API Documentation
+
+The system provides RESTful APIs for integration:
+
+### Authentication
+```
+POST /api/auth/login/
+POST /api/auth/logout/
+POST /api/auth/register/
+```
+
+### Products
+```
+GET /api/products/
+GET /api/products/{id}/
+POST /api/products/
+PUT /api/products/{id}/
+DELETE /api/products/{id}/
+```
+
+### Orders
+```
+GET /api/orders/
+GET /api/orders/{id}/
+POST /api/orders/
+PUT /api/orders/{id}/tracking/
+```
+
+## Testing
+
+```bash
+# Run all tests
+python manage.py test
+
+# Run with coverage
+coverage run --source='.' manage.py test
+coverage report
+coverage html
+```
+
+## Deployment
+
+### Production Checklist
+
+1. Set `DEBUG = False`
+2. Configure secure `SECRET_KEY`
+3. Set up proper database (PostgreSQL)
+4. Configure static file serving (Whitenoise/Nginx)
+5. Set up SSL certificates
+6. Configure monitoring (Sentry)
+7. Set up backups
+8. Configure logging
+
+### Docker Deployment
+
+```dockerfile
+# Dockerfile
+FROM python:3.9
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "quick_electronics.wsgi:application"]
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+    depends_on:
+      - db
+      - redis
+  
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: quick_electronics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+- **Documentation**: [Link to docs]
+- **Issues**: [GitHub Issues](https://github.com/yourusername/quick-electronics-supply-chain/issues)
+- **Email**: support@quickelectronics.com
+
+## Roadmap
+
+- [ ] Mobile app development
+- [ ] Advanced blockchain features
+- [ ] AI-powered inventory forecasting
+- [ ] Multi-language support
+- [ ] Advanced analytics dashboard
+- [ ] Integration with external APIs
+
+---
+
+**Quick Electronics Supply Chain Management System** - Revolutionizing electronics supply chain with blockchain technology.

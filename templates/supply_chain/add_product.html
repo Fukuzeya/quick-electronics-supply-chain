@@ -1,0 +1,143 @@
+<!-- templates/supply_chain/add_product.html -->
+{% extends 'supply_chain/base.html' %}
+
+{% block title %}Add Product - Quick Electronics{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h2 mb-1">
+                    <i class="fas fa-plus me-2 text-primary"></i>
+                    Add New Product
+                </h1>
+                <p class="text-muted mb-0">Add a new product to your catalog</p>
+            </div>
+            <a href="{% url 'supply_chain:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Product Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Product Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">SKU *</label>
+                            {{ form.sku }}
+                            {% if form.sku.errors %}
+                                <div class="text-danger small">{{ form.sku.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Category *</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Unit Price ($) *</label>
+                            {{ form.unit_price }}
+                            {% if form.unit_price.errors %}
+                                <div class="text-danger small">{{ form.unit_price.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label class="form-label">Description *</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Specifications -->
+                    <div class="mb-4">
+                        <label class="form-label">Specifications</label>
+                        {{ form.specifications }}
+                        <small class="form-text text-muted">
+                            Enter specifications in JSON format or plain text
+                        </small>
+                        {% if form.specifications.errors %}
+                            <div class="text-danger small">{{ form.specifications.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Stock Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Initial Stock Quantity *</label>
+                            {{ form.stock_quantity }}
+                            {% if form.stock_quantity.errors %}
+                                <div class="text-danger small">{{ form.stock_quantity.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Minimum Order Quantity *</label>
+                            {{ form.minimum_order_quantity }}
+                            {% if form.minimum_order_quantity.errors %}
+                                <div class="text-danger small">{{ form.minimum_order_quantity.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex gap-3 justify-content-end">
+                        <a href="{% url 'supply_chain:dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Add Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Help Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>SKU:</strong> Use a unique identifier for your product (e.g., PHONE-SAMSUNG-S24)</li>
+                    <li><strong>Specifications:</strong> You can enter JSON like {"Color": "Black", "RAM": "8GB"} or plain text</li>
+                    <li><strong>Pricing:</strong> Ensure competitive pricing for better visibility</li>
+                    <li><strong>Stock:</strong> Keep accurate stock levels for better customer experience</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
